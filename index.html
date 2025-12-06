@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fine Art Print Gallery</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Georgia", serif;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      header {
+        background-color: #2c2c2c;
+        color: #fff;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      header h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+      }
+
+      header p {
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        color: #ccc;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 4rem;
+        font-size: 1.2rem;
+        color: #666;
+      }
+
+      .error {
+        text-align: center;
+        padding: 4rem;
+        color: #c53030;
+        font-size: 1.1rem;
+      }
+
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .artwork-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .artwork-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .artwork-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        background-color: #e0e0e0;
+      }
+
+      .artwork-details {
+        padding: 1.5rem;
+      }
+
+      .artwork-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2c2c2c;
+      }
+
+      .artwork-artist {
+        font-size: 1rem;
+        color: #666;
+        font-style: italic;
+        margin-bottom: 0.5rem;
+      }
+
+      .artwork-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+        font-size: 0.9rem;
+        color: #777;
+      }
+
+      .artwork-year {
+        font-weight: 500;
+      }
+
+      .artwork-medium {
+        color: #555;
+      }
+
+      .artwork-price {
+        font-size: 1.2rem;
+        color: #2c5f2d;
+        font-weight: 600;
+        margin-top: 1rem;
+      }
+
+      footer {
+        background-color: #2c2c2c;
+        color: #ccc;
+        text-align: center;
+        padding: 2rem;
+        margin-top: 4rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Fine Art Print Gallery</h1>
+      <p>Curated Collection of Museum-Quality Prints</p>
+    </header>
+
+    <div class="container">
+      <div id="gallery-content">
+        <div class="loading">Loading artworks...</div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2024 Fine Art Print Gallery. All rights reserved.</p>
+    </footer>
+
+    <script>
+      // Configuration
+      const API_ENDPOINT =
+        // "https://xj7lahie3g.execute-api.us-east-2.amazonaws.com/getArtworks";
+        "https://xbgwox6uc3.execute-api.us-east-2.amazonaws.com/prod/artworks";
+
+      async function loadArtworks() {
+        const galleryContent = document.getElementById("gallery-content");
+
+        try {
+          const response = await fetch(API_ENDPOINT);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // Handle different response formats
+          const artworks = data.artworks || data.items || data.Items || data;
+
+          if (!artworks || artworks.length === 0) {
+            galleryContent.innerHTML =
+              '<div class="error">No artworks found in the gallery.</div>';
+            return;
+          }
+
+          displayArtworks(artworks);
+        } catch (error) {
+          console.error("Error loading artworks:", error);
+          galleryContent.innerHTML = `
+                    <div class="error">
+                        <p>Unable to load artworks at this time.</p>
+                        <p style="font-size: 0.9rem; margin-top: 1rem;">Error: ${error.message}</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Please check your API endpoint configuration.</p>
+                    </div>
+                `;
+        }
+      }
+
+      function displayArtworks(artworks) {
+        const galleryContent = document.getElementById("gallery-content");
+
+        const galleryHTML = artworks
+          .map(
+            (artwork) => `
+                <div class="artwork-card">
+                    <img 
+                        src="${
+                          artwork.imageUrl ||
+                          artwork.image_url ||
+                          artwork.image ||
+                          ""
+                        }" 
+                        alt="${artwork.title || "Untitled"}"
+                        class="artwork-image"
+                        onerror="this.src='https://via.placeholder.com/300x300?text=Image+Not+Available'"
+                    >
+                    <div class="artwork-details">
+                        <div class="artwork-title">${
+                          artwork.title || "Untitled"
+                        }</div>
+                        <div class="artwork-artist">${
+                          artwork.artist || "Unknown Artist"
+                        }</div>
+                        ${
+                          artwork.description
+                            ? `<p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">${artwork.description}</p>`
+                            : ""
+                        }
+                        <div class="artwork-info">
+                            <span class="artwork-year">${
+                              artwork.year || "Date Unknown"
+                            }</span>
+                            <span class="artwork-medium">${
+                              artwork.medium || ""
+                            }</span>
+                        </div>
+                        ${
+                          artwork.price
+                            ? `<div class="artwork-price">$${artwork.price}</div>`
+                            : ""
+                        }
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+
+        galleryContent.innerHTML = `<div class="gallery">${galleryHTML}</div>`;
+      }
+
+      // Load artworks when page loads
+      window.addEventListener("DOMContentLoaded", loadArtworks);
+    </script>
+  </body>
+</html>
